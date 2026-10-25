@@ -233,6 +233,22 @@ public sealed partial class DashboardViewModel : ObservableObject
         }
     }
 
+    /// <summary>Explains why the chosen series may have no data (shown instead of an empty plot).</summary>
+    public string BuildEmptyHint()
+    {
+        return SelectedSeries switch
+        {
+            "Current" => "No current data in this range - the driver reports no rate while plugged in " +
+                         "(the battery idles on AC). Unplug to see discharge current, or switch Series to Level.",
+            "Power" => "No power data in this range - the driver reports no rate while plugged in (idle on AC). " +
+                       "Unplug to see discharge power, or switch Series to Level.",
+            "Temperature" => "No temperature data in this range - this machine may not expose a battery temperature sensor.",
+            "Voltage" => "No voltage data in this range yet.",
+            "Level" => "No charge-level data in this range yet.",
+            _ => "No data in this range yet.",
+        };
+    }
+
     [RelayCommand]
     private void TogglePause()
     {

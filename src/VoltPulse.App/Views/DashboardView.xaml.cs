@@ -44,7 +44,7 @@ public partial class DashboardView : UserControl
     {
         if (ViewModel is not { Active: true } vm) return;
         var series = vm.BuildSeries(out string yLabel, out string xLabel);
-        Chart.Render(series is null ? [] : [series], yLabel, xLabel);
+        Chart.Render(series is null ? [] : [series], yLabel, xLabel, emptyHint: vm.BuildEmptyHint());
     }
 
     private void OnExport(object sender, RoutedEventArgs e)
