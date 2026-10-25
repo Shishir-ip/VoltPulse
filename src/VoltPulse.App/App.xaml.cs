@@ -27,22 +27,36 @@ public partial class App : System.Windows.Application, IDisposable
         GC.SuppressFinalize(this);
     }
 
+    private const string SingleInstanceMutexName = @"Local\VoltPulse.SingleInstance";
+    private const string ActivationEventName = @"Local\VoltPulse.ShowActivation";
+
     private Mutex? _singleInstanceMutex;
+    private EventWaitHandle? _activationEvent;
     private IHost? _host;
 
     protected override async void OnStartup(System.Windows.StartupEventArgs e)
     {
         base.OnStartup(e);
 
-        _singleInstanceMutex = new Mutex(true, @"Local\VoltPulse.SingleInstance", out bool createdNew);
+        // Single instance: a second launch asks the running one to show its window and exits
+        // silently - no popup, whether the first instance is in the tray or hidden in background.
+        _singleInstanceMutex = new Mutex(true, SingleInstanceMutexName, out bool createdNew);
+        _activationEvent = new EventWaitHandle(false, EventResetMode.AutoReset, ActivationEventName, out _);
         if (!createdNew)
         {
-            System.Windows.MessageBox.Show(
-                "VoltPulse is already running. Look for its icon in the system tray.",
-                "VoltPulse", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+            try
+            {
+                _ = _activationEvent.Set();
+            }
+            catch
+            {
+                // signaling is best effort; never block the second launch
+            }
             Shutdown(0);
             return;
         }
+
+        _ = Task.Run(WatchForActivationRequests);
 
         RegisterExceptionHandlers();
 
@@ -248,6 +262,46 @@ public partial class App : System.Windows.Application, IDisposable
 
     /// <summary>When the dispatcher goes idle, everything rendered fine - reset the loop guard.</summary>
     private void ResetFailureCounter(object? sender, EventArgs e) => _consecutiveUiFailures = 0;
+
+    /// <summary>
+    /// Background watcher: when a second instance signals the activation event, bring the main
+    /// window to the foreground. Runs on a thread-pool thread; exits with the process.
+    /// </summary>
+    private void WatchForActivationRequests()
+    {
+        while (_activationEvent is { } evt && evt.WaitOne())
+        {
+            if (IsExiting) return;
+            Dispatcher.BeginInvoke(ShowMainWindow);
+        }
+    }
+
+    /// <summary>Shows and foregrounds the main window (from the tray, or a second launch).</summary>
+    internal static void ShowMainWindow()
+    {
+        try
+        {
+            if (Current?.MainWindow is not { } window) return;
+            if (!window.IsVisible)
+            {
+                window.Show();
+            }
+            if (window.WindowState == System.Windows.WindowState.Minimized)
+            {
+                window.WindowState = System.Windows.WindowState.Normal;
+            }
+            window.Activate();
+            // Windows refuses to hand over foreground from background processes; the brief
+            // topmost flip reliably pulls the window to the front.
+            window.Topmost = true;
+            window.Topmost = false;
+            window.Focus();
+        }
+        catch
+        {
+            // activation must never crash the app
+        }
+    }
 
     private static void ShowKeptAliveDialog(Exception ex)
     {

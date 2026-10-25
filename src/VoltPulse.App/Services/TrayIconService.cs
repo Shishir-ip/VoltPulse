@@ -60,14 +60,7 @@ public sealed class TrayIconService : IHostedService, IDisposable
         _icon.ContextMenuStrip = menu;
     }
 
-    private static void ShowWindow()
-    {
-        var window = Application.Current.MainWindow;
-        if (window is null) return;
-        window.Show();
-        window.WindowState = System.Windows.WindowState.Normal;
-        window.Activate();
-    }
+    private static void ShowWindow() => App.ShowMainWindow();
 
     private static void NavigateTo(string label) =>
         (Application.Current.MainWindow?.DataContext as ViewModels.MainViewModel)?.NavigateToCommand.Execute(label);

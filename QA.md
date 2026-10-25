@@ -7,7 +7,7 @@ Run through this list before each release. Hardware used for the last pass: Acer
 
 - [ ] Portable zip: extract to a clean folder, run VoltPulse.exe - no prerequisites, no SmartScreen crash (unsigned builds warn; verify hash against SHA256SUMS.txt).
 - [ ] Installer: per-user install succeeds without admin; desktop/autostart options work; uninstall removes the app but keeps %APPDATA%\VoltPulse.
-- [ ] Second launch while running shows "already running" and does not start a second instance.
+- [ ] Second launch while running: no popup - the first instance's window is brought to the foreground (works whether it was minimized to tray, hidden, or minimized).
 - [ ] Cold start < 2 s; no window flicker; starts centered.
 
 ## Live screen
