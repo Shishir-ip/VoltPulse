@@ -6,7 +6,7 @@
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisLevel>latest-Recommended</AnalysisLevel>
     <AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
-    <Version>1.0.4</Version>
+    <Version>1.0.5</Version>
     <Product>VoltPulse</Product>
     <Authors>SHISHIR</Authors>
     <Company>SHISHIR</Company>
