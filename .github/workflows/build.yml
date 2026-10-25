@@ -44,12 +44,20 @@ jobs:
           Compress-Archive -Path "dist/win-x64/*" -DestinationPath "dist/VoltPulse-$v-portable-win-x64.zip"
           "VERSION=$v" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
+      - name: Flatten release assets
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          cd dist
+          cp win-x64/VoltPulse.exe "VoltPulse-${GITHUB_REF_NAME#v}-win-x64.exe"
+          cp win-arm64/VoltPulse.exe "VoltPulse-${GITHUB_REF_NAME#v}-win-arm64.exe"
+
       - name: Hashes
         if: startsWith(github.ref, 'refs/tags/v')
         shell: bash
         run: |
           cd dist
-          sha256sum VoltPulse-*-portable-win-x64.zip win-x64/VoltPulse.exe win-arm64/VoltPulse.exe > SHA256SUMS.txt
+          sha256sum VoltPulse-*.zip VoltPulse-*-win-x64.exe VoltPulse-*-win-arm64.exe > SHA256SUMS.txt
 
       - name: Release
         if: startsWith(github.ref, 'refs/tags/v')
@@ -57,10 +65,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${GITHUB_REF_NAME}" \
-            dist/VoltPulse-*-portable-win-x64.zip \
-            dist/win-x64/VoltPulse.exe \
-            dist/win-arm64/VoltPulse.exe \
-            dist/SHA256SUMS.txt \
-            --title "VoltPulse ${GITHUB_REF_NAME#v}" \
-            --generate-notes
+          ASSETS="dist/VoltPulse-*.zip dist/VoltPulse-*-win-x64.exe dist/VoltPulse-*-win-arm64.exe dist/SHA256SUMS.txt"
+          if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+            gh release upload "${GITHUB_REF_NAME}" ${ASSETS} --clobber
+          else
+            gh release create "${GITHUB_REF_NAME}" ${ASSETS} \
+              --title "VoltPulse ${GITHUB_REF_NAME#v}" \
+              --generate-notes
+          fi
