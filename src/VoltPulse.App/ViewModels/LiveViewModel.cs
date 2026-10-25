@@ -14,10 +14,16 @@ namespace VoltPulse.App.ViewModels;
 
 #pragma warning disable CA1305 // share text only
 
-/// <summary>Drives the Live screen: big reading, pills, min/max and the key-value fact list.</summary>
+/// <summary>
+/// Drives the Live screen: big reading (current or power, user-toggleable), pills, min/max and
+/// the key-value fact list. Both the current and the power stream are smoothed and tracked for
+/// min/max so switching units is instant.
+/// </summary>
 public sealed partial class LiveViewModel : ObservableObject
 {
     private const int WarmupSamples = 3;
+    private const double PillFloorMa = 5000;
+    private const double PillFloorMw = 5000;
 
     private readonly SamplerService _sampler;
     private readonly SettingsService _settings;
@@ -27,16 +33,22 @@ public sealed partial class LiveViewModel : ObservableObject
     private readonly DispatcherTimer _animTimer;
 
     private MovingAverage _currentAverage = new(3);
+    private MovingAverage _powerAverage = new(3);
     private readonly SpikeFilter _spikeFilter = new();
-    private double _displayedCurrent;
-    private bool _hasDisplayedCurrent;
+    private readonly SpikeFilter _powerSpikeFilter = new();
+    private double _displayedValue;
+    private bool _hasDisplayedValue;
     private double _animFrom;
     private double _animTo;
     private int _animElapsedMs;
-    private double _observedMaxMa = 5000;
+    private double _observedMax = PillFloorMa;
     private int _samplesTaken;
-    private double? _sessionMin;
-    private double? _sessionMax;
+    private double? _sessionMinMa;
+    private double? _sessionMaxMa;
+    private double? _sessionMinMw;
+    private double? _sessionMaxMw;
+    private double? _lastSmoothedCurrent;
+    private double? _lastSmoothedPower;
     private BatteryData? _lastBattery;
     private BatterySnapshot? _lastSnapshot;
 
@@ -72,6 +84,12 @@ public sealed partial class LiveViewModel : ObservableObject
     [ObservableProperty]
     private string _demoMenuText = "Enable demo mode";
 
+    [ObservableProperty]
+    private bool _isWattsActive;
+
+    [ObservableProperty]
+    private bool _isAmpsActive = true;
+
     public static string OnboardingText => VoltPulse.App.Services.Strings.T("OnboardingTip");
     public static string MeasuringText => VoltPulse.App.Services.Strings.T("Measuring");
 
@@ -101,6 +119,7 @@ public sealed partial class LiveViewModel : ObservableObject
         _dispatcher = Dispatcher.CurrentDispatcher;
 
         OnboardingVisible = !settings.Current.OnboardingShown;
+        SyncUnitFromSettings(settings.Current);
         ApplySmoothingWindow();
 
         _animTimer = new DispatcherTimer(DispatcherPriority.Render)
@@ -120,9 +139,31 @@ public sealed partial class LiveViewModel : ObservableObject
         _dispatcher.BeginInvoke(() =>
         {
             ApplySmoothingWindow();
+            SyncUnitFromSettings(settings);
             UpdateLiveBrush(settings);
             if (!settings.OnboardingShown) OnboardingVisible = true;
         });
+
+    private void SyncUnitFromSettings(AppSettings settings)
+    {
+        bool watts = settings.LiveUnit == LiveUnit.Watt;
+        if (watts != IsWattsActive)
+        {
+            IsWattsActive = watts;
+            IsAmpsActive = !watts;
+            OnUnitSwitched();
+        }
+    }
+
+    private void OnUnitSwitched()
+    {
+        // Reset the animation and the pill calibration for the new unit's domain.
+        _hasDisplayedValue = false;
+        _animTimer.Stop();
+        _observedMax = IsWattsActive ? PillFloorMw : PillFloorMa;
+        RenderReading();
+        UpdateMinMaxText();
+    }
 
     private void UpdateLiveBrush(AppSettings? settings = null)
     {
@@ -144,6 +185,10 @@ public sealed partial class LiveViewModel : ObservableObject
         if (_currentAverage.Window != _settings.Current.SmoothingSamples)
         {
             _currentAverage = new MovingAverage(_settings.Current.SmoothingSamples);
+        }
+        if (_powerAverage.Window != _settings.Current.SmoothingSamples)
+        {
+            _powerAverage = new MovingAverage(_settings.Current.SmoothingSamples);
         }
     }
 
@@ -169,39 +214,40 @@ public sealed partial class LiveViewModel : ObservableObject
             LiveState = battery.LiveState();
             UpdateLiveBrush(settings);
 
-            double? raw = battery.CurrentMilliamps(settings.InvertSignConvention);
-            double? filtered = raw is null ? null : _spikeFilter.Push(raw);
-            double? smoothed = _currentAverage.Push(filtered);
+            bool invert = settings.InvertSignConvention;
+            double? rawCurrent = battery.CurrentMilliamps(invert);
+            double? rawPower = battery.PowerMilliwatts();
+            if (rawPower is { } rp && invert) rawPower = -rp;
 
-            if (smoothed is null)
+            double? filteredCurrent = rawCurrent is null ? null : _spikeFilter.Push(rawCurrent);
+            _lastSmoothedCurrent = _currentAverage.Push(filteredCurrent);
+            double? filteredPower = rawPower is null ? null : _powerSpikeFilter.Push(rawPower);
+            _lastSmoothedPower = _powerAverage.Push(filteredPower);
+
+            _samplesTaken++;
+            RenderReading();
+
+            double? activeSmoothed = IsWattsActive ? _lastSmoothedPower : _lastSmoothedCurrent;
+            if (activeSmoothed is { } v)
             {
-                // No rate available: idle-on-AC reads as "Idle", otherwise measure briefly then give up.
-                if (battery.ChargeState.Value is ChargeState.FullyCharged or ChargeState.IdleOnAc)
-                {
-                    Measuring = false;
-                    BigValue = "Idle";
-                    BigUnit = string.Empty;
-                    BigValueVisible = true;
-                }
-                else if (_samplesTaken < WarmupSamples)
-                {
-                    Measuring = true;
-                }
-                else
-                {
-                    Measuring = false;
-                    BigValue = ValueFormatter.NotSupported;
-                    BigUnit = string.Empty;
-                    BigValueVisible = true;
-                }
+                AnimateTo(v);
             }
-            else
+
+            if (_lastSmoothedCurrent is { } c)
             {
-                _samplesTaken++;
-                Measuring = _samplesTaken < WarmupSamples;
-                AnimateCurrentTo(smoothed.Value);
-                UpdateMinMax(smoothed.Value);
-                UpdatePills(Math.Abs(smoothed.Value));
+                _sessionMinMa = _sessionMinMa is null ? c : Math.Min(_sessionMinMa.Value, c);
+                _sessionMaxMa = _sessionMaxMa is null ? c : Math.Max(_sessionMaxMa.Value, c);
+            }
+            if (_lastSmoothedPower is { } p)
+            {
+                _sessionMinMw = _sessionMinMw is null ? p : Math.Min(_sessionMinMw.Value, p);
+                _sessionMaxMw = _sessionMaxMw is null ? p : Math.Max(_sessionMaxMw.Value, p);
+            }
+            UpdateMinMaxText();
+
+            if (activeSmoothed is { } magnitude)
+            {
+                UpdatePills(Math.Abs(magnitude));
             }
 
             UpdateFacts(battery, snapshot, settings);
@@ -212,15 +258,57 @@ public sealed partial class LiveViewModel : ObservableObject
         }
     }
 
-    private void AnimateCurrentTo(double target)
+    /// <summary>Renders the big reading (and its idle/unsupported states) in the active unit.</summary>
+    private void RenderReading()
     {
-        _animFrom = _hasDisplayedCurrent ? _displayedCurrent : target;
+        var battery = _lastBattery;
+        if (battery is null) return;
+
+        double? smoothed = IsWattsActive ? _lastSmoothedPower : _lastSmoothedCurrent;
+        if (smoothed is null)
+        {
+            // No rate available: idle-on-AC reads as "Idle", otherwise measure briefly then give up.
+            if (battery.ChargeState.Value is ChargeState.FullyCharged or ChargeState.IdleOnAc)
+            {
+                Measuring = false;
+                BigValue = "Idle";
+                BigUnit = string.Empty;
+                BigValueVisible = true;
+            }
+            else if (_samplesTaken < WarmupSamples)
+            {
+                Measuring = true;
+            }
+            else
+            {
+                Measuring = false;
+                BigValue = ValueFormatter.NotSupported;
+                BigUnit = string.Empty;
+                BigValueVisible = true;
+            }
+            return;
+        }
+
+        if (Measuring && _samplesTaken >= WarmupSamples)
+        {
+            Measuring = false;
+        }
+
+        var (value, unit) = FormatReading(smoothed.Value);
+        BigValue = value;
+        BigUnit = unit;
+        BigValueVisible = true;
+    }
+
+    private void AnimateTo(double target)
+    {
+        _animFrom = _hasDisplayedValue ? _displayedValue : target;
         _animTo = target;
         _animElapsedMs = 0;
-        if (!_hasDisplayedCurrent)
+        if (!_hasDisplayedValue)
         {
-            _displayedCurrent = target;
-            _hasDisplayedCurrent = true;
+            _displayedValue = target;
+            _hasDisplayedValue = true;
         }
         _animTimer.Start();
     }
@@ -230,9 +318,9 @@ public sealed partial class LiveViewModel : ObservableObject
         _animElapsedMs += 16;
         double t = Math.Min(1, _animElapsedMs / 300.0);
         double ease = 1 - Math.Pow(1 - t, 3);
-        _displayedCurrent = _animFrom + (_animTo - _animFrom) * ease;
+        _displayedValue = _animFrom + (_animTo - _animFrom) * ease;
 
-        var (value, unit) = FormatBig(_displayedCurrent);
+        var (value, unit) = FormatReading(_displayedValue);
         BigValue = value;
         BigUnit = unit;
         BigValueVisible = true;
@@ -243,33 +331,43 @@ public sealed partial class LiveViewModel : ObservableObject
         }
     }
 
-    private static (string Value, string Unit) FormatBig(double ma)
+    private (string Value, string Unit) FormatReading(double value)
     {
-        double abs = Math.Abs(ma);
+        if (IsWattsActive)
+        {
+            return ValueFormatter.PowerBigParts(value);
+        }
+        double abs = Math.Abs(value);
         return abs >= 1000
-            ? ((ma / 1000.0).ToString("0.00", CultureInfo.InvariantCulture), "A")
-            : (ma.ToString("0", CultureInfo.InvariantCulture), "mA");
+            ? ((value / 1000.0).ToString("0.00", CultureInfo.InvariantCulture), "A")
+            : (value.ToString("0", CultureInfo.InvariantCulture), "mA");
     }
 
-    private static string FormatBigFull(double ma)
+    private string FormatReadingFull(double value)
     {
-        var (value, unit) = FormatBig(ma);
-        return string.Create(CultureInfo.InvariantCulture, $"{value} {unit}");
+        var (valueText, unit) = FormatReading(value);
+        return string.Create(CultureInfo.InvariantCulture, $"{valueText} {unit}");
     }
 
-    private void UpdateMinMax(double current)
+    private void UpdateMinMaxText()
     {
-        _sessionMin = _sessionMin is null ? current : Math.Min(_sessionMin.Value, current);
-        _sessionMax = _sessionMax is null ? current : Math.Max(_sessionMax.Value, current);
-        MinText = FormatBigFull(_sessionMin.Value);
-        MaxText = FormatBigFull(_sessionMax.Value);
+        if (IsWattsActive)
+        {
+            MinText = _sessionMinMw is { } min ? FormatReadingFull(min) : "—";
+            MaxText = _sessionMaxMw is { } max ? FormatReadingFull(max) : "—";
+        }
+        else
+        {
+            MinText = _sessionMinMa is { } min ? FormatReadingFull(min) : "—";
+            MaxText = _sessionMaxMa is { } max ? FormatReadingFull(max) : "—";
+        }
     }
 
-    private void UpdatePills(double absCurrent)
+    private void UpdatePills(double absMagnitude)
     {
-        _observedMaxMa = Math.Max(_observedMaxMa, absCurrent);
-        double range = Math.Max(_observedMaxMa, 5000);
-        double fill = Math.Clamp(absCurrent / range, 0, 1) * Pills.Count;
+        _observedMax = Math.Max(_observedMax, absMagnitude);
+        double range = Math.Max(_observedMax, IsWattsActive ? PillFloorMw : PillFloorMa);
+        double fill = Math.Clamp(absMagnitude / range, 0, 1) * Pills.Count;
         for (int i = 0; i < Pills.Count; i++)
         {
             Pills[i].Fill = Math.Clamp(fill - i, 0, 1);
@@ -295,6 +393,7 @@ public sealed partial class LiveViewModel : ObservableObject
         }
 
         bool fahrenheit = settings.UseFahrenheit;
+        bool invert = settings.InvertSignConvention;
 
         SetFact("Status", status, b.ChargeState.Source,
             "Whether the battery is charging, discharging or idle right now.");
@@ -322,10 +421,18 @@ public sealed partial class LiveViewModel : ObservableObject
             "Battery temperature. Only shown if the hardware exposes a sensor.");
         SetFact("Voltage", ValueFormatter.Voltage(b.VoltageMillivolts.Value), b.VoltageMillivolts.Source,
             "Battery terminal voltage.");
-        SetFact("Power", ValueFormatter.Power(b.PowerMilliwatts()), b.RateMilliwatts.Source,
-            "Charging (positive) or discharging (negative) power right now.");
-        SetFact("Charge speed", ValueFormatter.SignedPercentPerHour(b.PercentPerHour()), DataProviderSource.Derived,
-            "How fast the charge level changes, in percent per hour, from the smoothed current reading.");
+        double? power = b.PowerMilliwatts();
+        if (power is { } pw && invert) power = -pw;
+        SetFact("Power", ValueFormatter.Power(power), b.RateMilliwatts.Source,
+            invert
+                ? "Charging (negative) or discharging (positive) power right now - sign flipped by your Invert sign setting."
+                : "Charging (positive) or discharging (negative) power right now.");
+        double? pph = b.PercentPerHour();
+        if (pph is { } speed && invert) pph = -speed;
+        SetFact("Charge speed", ValueFormatter.SignedPercentPerHour(pph), DataProviderSource.Derived,
+            invert
+                ? "How fast the charge level changes, in percent per hour (sign flipped by your Invert sign setting)."
+                : "How fast the charge level changes, in percent per hour, from the smoothed current reading.");
         SetFact("Time to full / empty", TimeEstimate(b, settings), DataProviderSource.Derived,
             "Estimated from the smoothed charge rate. The tooltip shows the Windows estimate for comparison.");
         SetFact("Manufacturer", b.Manufacturer.Value ?? ValueFormatter.NotSupported, b.Manufacturer.Source,
@@ -346,7 +453,7 @@ public sealed partial class LiveViewModel : ObservableObject
         if (settings.ShowRawValues)
         {
             SetFact("Rate (raw)", b.RateMilliwatts.Value is { } r ? $"{r} mW" : ValueFormatter.NotSupported, b.RateMilliwatts.Source,
-                "The unmodified rate value as reported by the driver, in mW (signed).");
+                "The unmodified rate value as reported by the driver, in mW (signed, never inverted).");
             SetFact("Voltage (raw)", b.VoltageMillivolts.Value is { } v ? $"{v} mV" : ValueFormatter.NotSupported, b.VoltageMillivolts.Source,
                 "The unmodified voltage value as reported by the driver, in mV.");
         }
@@ -468,10 +575,26 @@ public sealed partial class LiveViewModel : ObservableObject
     // ----- commands -----
 
     [RelayCommand]
+    private void SelectUnit(string unit)
+    {
+        var target = string.Equals(unit, "W", StringComparison.OrdinalIgnoreCase) ? LiveUnit.Watt : LiveUnit.Current;
+        if (_settings.Current.LiveUnit != target)
+        {
+            _settings.Update(s => s.LiveUnit = target); // SyncUnitFromSettings runs via Changed
+        }
+        else
+        {
+            SyncUnitFromSettings(_settings.Current);
+        }
+    }
+
+    [RelayCommand]
     private void ResetMinMax()
     {
-        _sessionMin = null;
-        _sessionMax = null;
+        _sessionMinMa = null;
+        _sessionMaxMa = null;
+        _sessionMinMw = null;
+        _sessionMaxMw = null;
         MinText = "—";
         MaxText = "—";
         _logger.Debug("Session min/max reset");

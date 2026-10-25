@@ -42,6 +42,15 @@ public class ValueFormatterTests
     }
 
     [Fact]
+    public void PowerBigParts_SplitsValueAndUnit()
+    {
+        Assert.Equal(("56.78", "W"), ValueFormatter.PowerBigParts(56780));
+        Assert.Equal(("400", "mW"), ValueFormatter.PowerBigParts(400));
+        Assert.Equal(("-3.43", "W"), ValueFormatter.PowerBigParts(-3430));
+        Assert.Equal((ValueFormatter.NotSupported, ""), ValueFormatter.PowerBigParts(null));
+    }
+
+    [Fact]
     public void Capacity_CycleCount_Date()
     {
         Assert.Equal("50,000 mWh", ValueFormatter.Capacity(50000));

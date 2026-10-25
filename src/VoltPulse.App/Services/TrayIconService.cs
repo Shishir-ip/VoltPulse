@@ -136,11 +136,12 @@ public sealed class TrayIconService : IHostedService, IDisposable
         UpdateVisual(battery.LiveState(), battery.Percent.Value, Describe(battery));
     }
 
-    private static string Describe(BatteryData battery)
+    private string Describe(BatteryData battery)
     {
         string percent = battery.Percent.Value is { } p ? $"{p:0}%" : "?";
-        string rate = battery.CurrentMilliamps() is { } ma
-            ? $"{(ma >= 0 ? "+" : string.Empty)}{ValueFormat(ma)}"
+        double? ma = battery.CurrentMilliamps(_settings.Current.InvertSignConvention);
+        string rate = ma is { } value
+            ? $"{(value >= 0 ? "+" : string.Empty)}{ValueFormat(value)}"
             : "idle";
         return $"{percent} | {rate}";
     }

@@ -28,6 +28,16 @@ public static class ValueFormatter
             : string.Create(CultureInfo.InvariantCulture, $"{mw.Value:0} mW");
     }
 
+    /// <summary>Big power reading for the Live screen: value and unit parts (mW below 1 W).</summary>
+    public static (string Value, string Unit) PowerBigParts(double? mw)
+    {
+        if (mw is null) return (NotSupported, string.Empty);
+        double v = mw.Value;
+        return Math.Abs(v) >= 1000
+            ? (string.Create(CultureInfo.InvariantCulture, $"{v / 1000.0:0.00}"), "W")
+            : (string.Create(CultureInfo.InvariantCulture, $"{v:0}"), "mW");
+    }
+
     public static string Voltage(double? mv)
         => mv is null ? NotSupported : string.Create(CultureInfo.InvariantCulture, $"{mv.Value / 1000.0:0.000} V");
 

@@ -16,6 +16,9 @@ public enum AlertKind
 
 public enum TemperatureUnit { Celsius, Fahrenheit }
 
+/// <summary>Which quantity the Live screen's big reading shows.</summary>
+public enum LiveUnit { Current, Watt }
+
 public enum ThemeMode { Dark, Light, FollowWindows }
 
 public sealed class AlertRuleSettings
@@ -65,6 +68,7 @@ public sealed class AppSettings
     public double FontScale { get; set; } = 1.0;
     public bool UseFahrenheit { get; set; }
     public bool Use24HourClock { get; set; } = true;
+    public LiveUnit LiveUnit { get; set; } = LiveUnit.Current;
     public string Language { get; set; } = "en";
 
     // Sampling

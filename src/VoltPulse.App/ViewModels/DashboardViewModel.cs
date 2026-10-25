@@ -161,31 +161,31 @@ public sealed partial class DashboardViewModel : ObservableObject
 
                 case "24 hours":
                     EnsureDbCache(TimeSpan.FromHours(24), useHourly: false);
-                    return FromDb(sample => SelectedSeries switch
-                    {
-                        "Power" => sample.PowerMw / 1000.0,
-                        "Voltage" => sample.VoltageMv is { } v ? v / 1000.0 : null,
-                        "Level" => sample.Percent,
-                        "Temperature" => sample.TempC,
-                        _ => sample.CurrentMa,
-                    }, 1);
+                    return FromDb(sample => PickSeries(sample), 1);
 
                 case "7 days":
                 case "30 days":
                     EnsureDbCache(TimeSpan.FromDays(SelectedRange == "7 days" ? 7 : 30), useHourly: true);
-                    return FromDb(sample => SelectedSeries switch
-                    {
-                        "Power" => sample.PowerMw / 1000.0,
-                        "Voltage" => null,
-                        "Level" => sample.Percent,
-                        "Temperature" => sample.TempC,
-                        _ => sample.CurrentMa,
-                    }, 3600);
+                    return FromDb(sample => PickSeries(sample), 3600);
 
                 default:
                     return null;
             }
         }
+    }
+
+    /// <summary>Picks the value for the selected series; the power series follows the sign convention.</summary>
+    private double? PickSeries(BatterySample sample)
+    {
+        double flip = _settings.Current.InvertSignConvention ? -1 : 1;
+        return SelectedSeries switch
+        {
+            "Power" => sample.PowerMw * flip / 1000.0,
+            "Voltage" => sample.VoltageMv is { } v ? v / 1000.0 : null,
+            "Level" => sample.Percent,
+            "Temperature" => sample.TempC,
+            _ => sample.CurrentMa,
+        };
     }
 
     private Controls.TimeSeriesChart.SeriesData FromDb(Func<BatterySample, double?> pick, double periodSeconds)
