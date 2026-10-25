@@ -6,11 +6,11 @@
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisLevel>latest-Recommended</AnalysisLevel>
     <AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
-    <Version>1.0.0</Version>
+    <Version>1.0.2</Version>
     <Product>VoltPulse</Product>
-    <Authors>VoltPulse Project</Authors>
-    <Company>VoltPulse Project</Company>
-    <Copyright>Copyright © 2026 VoltPulse Project</Copyright>
+    <Authors>SHISHIR</Authors>
+    <Company>SHISHIR</Company>
+    <Copyright>Copyright © 2026 SHISHIR</Copyright>
     <NeutralLanguage>en</NeutralLanguage>
   </PropertyGroup>
 </Project>

@@ -6,6 +6,8 @@
 ![Runtime](https://img.shields.io/badge/.NET-8-512BD4)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
+**Developed by [SHISHIR](https://github.com/Shishir-ip)**
+
 A local-only Windows battery monitor for laptops and tablets. It shows live charging/discharging
 current (like Ampere on Android), full battery facts, health, history graphs, sessions and smart
 alerts - with every value's data source visible. No network access, no telemetry, no accounts, no ads.

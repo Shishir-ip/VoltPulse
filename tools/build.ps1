@@ -12,7 +12,7 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
 
-$version = (Select-Xml -Path "src\VoltPulse.App\VoltPulse.App.csproj" -XPath "//Version" -ErrorAction SilentlyContinue)
+$version = (Select-Xml -Path "Directory.Build.props" -XPath "//Version" -ErrorAction SilentlyContinue)
 $version = if ($version) { $version.Node.InnerText } else { "1.0.0" }
 Write-Host "=== VoltPulse build $version ($Configuration) ===" -ForegroundColor Cyan
 

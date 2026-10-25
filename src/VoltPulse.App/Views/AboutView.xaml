@@ -7,9 +7,21 @@
                 <Path Data="{StaticResource IconBolt}" Width="26" Height="26" Stretch="Uniform" Fill="{DynamicResource BrushAccent}" VerticalAlignment="Center" />
                 <TextBlock Text="VoltPulse" Style="{StaticResource H1}" Margin="10,0,0,0" VerticalAlignment="Center" />
                 <TextBlock Text="{Binding Version}" Style="{StaticResource Caption}" Margin="10,0,0,0" VerticalAlignment="Center" />
+                <TextBlock Text="· © 2026 SHISHIR" Style="{StaticResource Caption}" Margin="10,0,0,0" VerticalAlignment="Center" />
             </StackPanel>
             <TextBlock Style="{StaticResource Caption}" Margin="0,6,0,0"
                        Text="A local-only battery monitor. No network access, no telemetry, no accounts, no ads." TextWrapping="Wrap" />
+            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                <TextBlock Text="Developed by " Foreground="{DynamicResource BrushTextPrimary}" VerticalAlignment="Center" />
+                <TextBlock VerticalAlignment="Center">
+                    <Hyperlink NavigateUri="https://github.com/Shishir-ip"
+                               RequestNavigate="OnAuthorLinkClick"
+                               Foreground="{DynamicResource BrushAccent}"
+                               TextDecorations="{x:Null}">
+                        <Run Text="SHISHIR (github.com/Shishir-ip)" />
+                    </Hyperlink>
+                </TextBlock>
+            </StackPanel>
 
             <Border Style="{StaticResource CardBody}" Margin="0,14,0,0">
                 <StackPanel>
