@@ -244,6 +244,25 @@ public sealed class SqliteHistoryStore : IHistoryStore, IDisposable
         }
     }
 
+    public void DeleteImportedSessions()
+    {
+        lock (_gate)
+        {
+            try
+            {
+                EnsureOpen();
+                using var cmd = _connection!.CreateCommand();
+                cmd.CommandText = "DELETE FROM sessions WHERE battery_id = $id";
+                cmd.Parameters.AddWithValue("$id", "IMPORTED");
+                _ = cmd.ExecuteNonQuery();
+            }
+            catch (SqliteException ex)
+            {
+                HandleCorruption(ex);
+            }
+        }
+    }
+
     public IReadOnlyList<SessionRecord> GetSessions(int limit = 200, int offset = 0)
     {
         var result = new List<SessionRecord>();

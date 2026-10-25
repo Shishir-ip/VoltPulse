@@ -138,6 +138,8 @@ public partial class App : System.Windows.Application, IDisposable
         services.AddSingleton<HistoryWriterService>();
         services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<HistoryWriterService>());
         services.AddSingleton<PowerCfgReportImporter>();
+        services.AddSingleton<BatteryReportImportService>();
+        services.AddSingleton<BatteryReportImportService>();
         services.AddSingleton<IAlertPresenter, AlertPresenter>();
         services.AddSingleton<AlertEngine>();
         services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<AlertEngine>());

@@ -4,14 +4,18 @@ using CommunityToolkit.Mvvm.Input;
 using VoltPulse.Core.Abstractions;
 using VoltPulse.Core.Formatting;
 using VoltPulse.Core.Models;
+using VoltPulse.App.Services;
+using VoltPulse.Services;
 
 namespace VoltPulse.App.ViewModels;
 
 public sealed partial class SessionRow : ObservableObject
 {
     public required SessionRecord Session { get; init; }
+    public bool IsOngoing { get; init; }
 
-    public string Kind => Session.Kind == ChargeState.Charging ? "Charging" : "Discharging";
+    public string Kind => (Session.Kind == ChargeState.Charging ? "Charging" : "Discharging")
+        + (IsOngoing ? " (ongoing)" : "");
 
     public string Start => Session.StartUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture);
 
@@ -31,7 +35,10 @@ public sealed partial class SessionRow : ObservableObject
 public sealed partial class SessionsViewModel : ObservableObject
 {
     private readonly IHistoryStore _store;
+    private readonly HistoryWriterService _writer;
+    private readonly BatteryReportImportService _importService;
     private readonly Dispatcher _dispatcher;
+    private readonly System.Windows.Threading.DispatcherTimer _autoRefreshTimer;
 
     public System.Collections.ObjectModel.ObservableCollection<SessionRow> Sessions { get; } = [];
 
@@ -43,26 +50,61 @@ public sealed partial class SessionsViewModel : ObservableObject
 
     public event Action<SessionRecord?>? SessionGraphRequested;
 
-    public SessionsViewModel(IHistoryStore store)
+    public SessionsViewModel(IHistoryStore store, HistoryWriterService writer, BatteryReportImportService importService)
     {
         _store = store;
+        _writer = writer;
+        _importService = importService;
         _dispatcher = Dispatcher.CurrentDispatcher;
+        _autoRefreshTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(10),
+        };
+        _autoRefreshTimer.Tick += (_, _) => Refresh();
+        _importService.ImportCompleted += _ => RefreshFromAnyThread();
     }
+
+    public void Activate()
+    {
+        _importService.EnsureFresh(force: false);
+        Refresh();
+        _autoRefreshTimer.Start();
+    }
+
+    public void Deactivate() => _autoRefreshTimer.Stop();
 
     public void RefreshFromAnyThread() => _dispatcher.BeginInvoke(Refresh);
 
     [RelayCommand]
     private void Refresh()
     {
-        var sessions = _store.GetSessions(200);
-        Sessions.Clear();
-        foreach (var s in sessions)
+        var open = _writer.OpenSession;
+        var sessions = _store.GetSessions(200).ToList();
+        if (open is null)
         {
-            Sessions.Add(new SessionRow { Session = s });
+            Sessions.Clear();
+            foreach (var s in sessions)
+            {
+                Sessions.Add(new SessionRow { Session = s });
+            }
         }
-        Summary = sessions.Count == 0
-            ? "No sessions recorded yet. They appear automatically when you charge or discharge the battery."
-            : $"{sessions.Count} session(s) stored. Click one to see its graph.";
+        else
+        {
+            // Show the in-progress session at the top (the store row is skipped to avoid duplicates).
+            Sessions.Clear();
+            if (open.Id is null || sessions.All(s => s.Id != open.Id))
+            {
+                Sessions.Add(new SessionRow { Session = open, IsOngoing = true });
+            }
+            foreach (var s in sessions)
+            {
+                Sessions.Add(new SessionRow { Session = s, IsOngoing = open.Id is not null && s.Id == open.Id });
+            }
+        }
+        Summary = Sessions.Count == 0
+            ? "No sessions recorded yet. They appear automatically when you charge or discharge the battery; " +
+              "older sessions are backfilled from the Windows battery report."
+            : $"{Sessions.Count} session(s). Click one to see its graph.";
     }
 
     partial void OnSelectedSessionChanged(SessionRow? value)
@@ -78,4 +120,6 @@ public sealed partial class SessionsViewModel : ObservableObject
         Summary = "History cleared.";
         SessionGraphRequested?.Invoke(null);
     }
+
+
 }

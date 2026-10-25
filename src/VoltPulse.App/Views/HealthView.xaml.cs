@@ -13,6 +13,13 @@ public partial class HealthView : UserControl
         InitializeComponent();
         DataContextChanged += (_, _) => OnViewModelChanged();
         Loaded += (_, _) => UpdateRing();
+        IsVisibleChanged += (_, e) =>
+        {
+            if (e.NewValue is true && DataContext is HealthViewModel viewModel)
+            {
+                viewModel.Activate();
+            }
+        };
     }
 
     private HealthViewModel? ViewModel => DataContext as HealthViewModel;

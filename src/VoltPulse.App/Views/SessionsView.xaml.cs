@@ -24,14 +24,19 @@ public partial class SessionsView : UserControl
         if (ViewModel is not { } vm) return;
         _store ??= VoltPulse.App.App.HostServices?.GetService(typeof(IHistoryStore)) as IHistoryStore;
         vm.SessionGraphRequested += OnSessionGraphRequested;
-        vm.RefreshFromAnyThread();
+        IsVisibleChanged += (_, e) =>
+        {
+            if (DataContext is not SessionsViewModel viewModel) return;
+            if (e.NewValue is true) viewModel.Activate();
+            else viewModel.Deactivate();
+        };
     }
 
     private void OnSessionGraphRequested(SessionRecord? session)
     {
         if (session is null || _store is null)
         {
-            SessionChart.Render([], "", "");
+            SessionChart.Render([], "", "", "Select a session above to see its graph.");
             return;
         }
 
@@ -44,9 +49,16 @@ public partial class SessionsView : UserControl
             level[i] = samples[i].Percent ?? double.NaN;
         }
 
-        double period = samples.Count > 1
-            ? Math.Max(0.1, (samples[^1].TimestampUtc - samples[0].TimestampUtc).TotalSeconds / (samples.Count - 1))
-            : 1;
+        if (samples.Count < 2)
+        {
+            SessionChart.Render([], "", "",
+                session.BatteryId == "IMPORTED"
+                    ? "Raw samples are not available for sessions imported from the Windows report."
+                    : "Not enough samples recorded for this session yet.");
+            return;
+        }
+
+        double period = Math.Max(0.1, (samples[^1].TimestampUtc - samples[0].TimestampUtc).TotalSeconds / (samples.Count - 1));
 
         SessionChart.Render(
         [

@@ -18,6 +18,9 @@ public interface IHistoryStore
 
     void UpsertSession(SessionRecord session);
 
+    /// <summary>Deletes sessions backfilled from a powercfg report (used to avoid duplicates on re-import).</summary>
+    void DeleteImportedSessions();
+
     IReadOnlyList<SessionRecord> GetSessions(int limit = 200, int offset = 0);
 
     /// <summary>Folds full-resolution samples older than the cutoff into hourly aggregates.</summary>

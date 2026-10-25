@@ -1,10 +1,8 @@
-using System.IO;
-using System.Text.Json;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VoltPulse.Core.Models;
-using VoltPulse.Core.Paths;
+using VoltPulse.App.Services;
 using VoltPulse.Services;
 
 namespace VoltPulse.App.ViewModels;
@@ -14,9 +12,8 @@ public sealed partial class HealthViewModel : ObservableObject
 {
     private readonly SamplerService _sampler;
     private readonly SettingsService _settings;
-    private readonly PowerCfgReportImporter _importer;
+    private readonly BatteryReportImportService _importService;
     private readonly Dispatcher _dispatcher;
-    private readonly string _cacheFile = Path.Combine(AppPaths.CacheDir, "powercfg-capacity.json");
 
     private PowerCfgReportData? _report;
     private double? _healthPercent;
@@ -56,15 +53,23 @@ public sealed partial class HealthViewModel : ObservableObject
 
     public event Action<double[], string>? FadeChartUpdated; // values, tooltip note
 
-    public HealthViewModel(SamplerService sampler, SettingsService settings, PowerCfgReportImporter importer, Serilog.ILogger logger)
+    public HealthViewModel(SamplerService sampler, SettingsService settings, BatteryReportImportService importService, Serilog.ILogger logger)
     {
         _sampler = sampler;
         _settings = settings;
-        _importer = importer;
+        _importService = importService;
         _dispatcher = Dispatcher.CurrentDispatcher;
         _sampler.SnapshotReady += OnSnapshot;
-        LoadCachedReport();
+        _importService.ImportCompleted += OnImportCompleted;
+        // If a report is already cached from an earlier import, render it as soon as the view subscribes.
+        if (_report is not null)
+        {
+            PublishFade();
+        }
     }
+
+    /// <summary>Called by the view when the Health page becomes visible.</summary>
+    public void Activate() => _importService.EnsureFresh(force: false);
 
     private void OnSnapshot(BatterySnapshot snapshot) =>
         _dispatcher.BeginInvoke(() =>
@@ -91,62 +96,20 @@ public sealed partial class HealthViewModel : ObservableObject
             CycleCountText = battery.CycleCount.Value is { } cycles ? $"{cycles} (from firmware)" : "Not supported by this device";
         });
 
+    private void OnImportCompleted(PowerCfgReportData report) =>
+        _dispatcher.BeginInvoke(() =>
+        {
+            IsImporting = false;
+            _report = report;
+            PublishFade();
+        });
+
     [RelayCommand]
     private void ImportReport()
     {
         if (IsImporting) return;
         IsImporting = true;
-        Task.Run(() =>
-        {
-            var report = _importer.Import();
-            _dispatcher.BeginInvoke(() =>
-            {
-                IsImporting = false;
-                if (report is not null)
-                {
-                    _report = report;
-                    SaveCachedReport(report);
-                    PublishFade();
-                }
-                else
-                {
-                    FadeSource = "powercfg could not produce a battery report on this machine.";
-                }
-            });
-        });
-    }
-
-    private void LoadCachedReport()
-    {
-        try
-        {
-            if (File.Exists(_cacheFile))
-            {
-                var report = JsonSerializer.Deserialize<PowerCfgReportData>(File.ReadAllText(_cacheFile));
-                if (report is not null && DateTime.UtcNow - report.ImportedAtUtc < TimeSpan.FromDays(7))
-                {
-                    _report = report;
-                    PublishFade();
-                }
-            }
-        }
-        catch
-        {
-            // cache is best effort
-        }
-    }
-
-    private void SaveCachedReport(PowerCfgReportData report)
-    {
-        try
-        {
-            AppPaths.EnsureDirectories();
-            File.WriteAllText(_cacheFile, JsonSerializer.Serialize(report));
-        }
-        catch
-        {
-            // cache is best effort
-        }
+        _importService.EnsureFresh(force: true);
     }
 
     private void PublishFade()
@@ -159,9 +122,11 @@ public sealed partial class HealthViewModel : ObservableObject
         }
         HasFadeData = true;
         var values = report.CapacityHistory.Select(e => (double)e.FullChargeCapacity).ToArray();
-        // X axis is entry-index based; present as days before now.
-        FadeSource = $"From the Windows battery report ({report.CapacityHistory.Count} entries, imported {report.ImportedAtUtc.ToLocalTime():yyyy-MM-dd HH:mm}).";
-        FadeChartUpdated?.Invoke(values, "days before now");
+        var first = report.CapacityHistory[0];
+        var last = report.CapacityHistory[^1];
+        FadeSource = $"From the Windows battery report: {report.CapacityHistory.Count} weekly entries, " +
+                     $"{first.FullChargeCapacity:N0} mWh on {first.Date:yyyy-MM-dd} -> {last.FullChargeCapacity:N0} mWh on {last.Date:yyyy-MM-dd}.";
+        FadeChartUpdated?.Invoke(values, "weeks before now");
     }
 }
 

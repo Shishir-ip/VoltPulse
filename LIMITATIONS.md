@@ -17,6 +17,11 @@ Everything below reflects real behavior observed on hardware, not guesses. The a
   without admin-level EC access.
 - **Idle charging**: many drivers report rate 0 / unknown while plugged in but not charging.
   The Live screen shows "Idle" in that case instead of 0 mA.
+- **Report import**: the Health page's capacity fade and the Sessions page's history are
+  automatically imported from `powercfg /batteryreport` (auto-refresh every 24 hours; the button
+  forces it). Imported sessions are approximate reconstructions of the report's usage history
+  (marked "IMPORTED" internally); their average current is estimated from the nominal voltage and
+  peak current is not available, so clicking one shows a summary chart without raw samples.
 - **Cycle count** comes from `BatteryCycleCount` (WMI). Firmware frequently reports 0, which
   VoltPulse treats as "not reported" rather than showing a fake 0. The spec's "estimated cycle
   count" (from cumulative energy throughput) is NOT implemented: VoltPulse only knows the energy

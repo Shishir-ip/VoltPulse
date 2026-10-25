@@ -93,12 +93,19 @@ public sealed class HistoryWriterService : IHostedService, IDisposable
         }
     }
 
+    /// <summary>The session currently in progress, if any (live view of the tracker).</summary>
+    public SessionRecord? OpenSession => _sessions.OpenSession;
+
     public void Flush()
     {
         List<BatterySample> toWrite;
         lock (_pending)
         {
-            if (_pending.Count == 0) return;
+            if (_pending.Count == 0)
+            {
+                PersistOpenSession();
+                return;
+            }
             toWrite = _pending;
             _pending = [];
         }
@@ -109,6 +116,27 @@ public sealed class HistoryWriterService : IHostedService, IDisposable
         catch (Exception ex)
         {
             _logger.Error(ex, "Failed to flush {Count} samples", toWrite.Count);
+        }
+        PersistOpenSession();
+    }
+
+    /// <summary>
+    /// Keeps the in-progress session in the database (inserted once, then updated) so it shows in
+    /// the Sessions page while it is running and survives a crash. Short sessions are never
+    /// persisted, matching the completion threshold.
+    /// </summary>
+    private void PersistOpenSession()
+    {
+        var open = _sessions.OpenSession;
+        if (open is null || open.EndUtc is null) return;
+        if ((open.EndUtc.Value - open.StartUtc).TotalSeconds < 30) return;
+        try
+        {
+            _store.UpsertSession(open);
+        }
+        catch (Exception ex)
+        {
+            _logger.Warning(ex, "Persisting the in-progress session failed");
         }
     }
 
