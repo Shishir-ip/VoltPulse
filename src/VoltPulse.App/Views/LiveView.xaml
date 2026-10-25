@@ -113,6 +113,25 @@
                            VerticalAlignment="Bottom"
                            Visibility="{Binding BigValueVisible, Converter={StaticResource BoolToVis}}" />
             </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,8,0,0">
+                <RadioButton GroupName="LiveUnit"
+                             Content="A"
+                             Style="{StaticResource UnitToggle}"
+                             Command="{Binding SelectUnitCommand}"
+                             CommandParameter="A"
+                             IsChecked="{Binding IsAmpsActive, Mode=OneWay}"
+                             AutomationProperties.Name="Show reading in amperes"
+                             ToolTip="Show the reading in amperes (current)" />
+                <RadioButton GroupName="LiveUnit"
+                             Content="W"
+                             Style="{StaticResource UnitToggle}"
+                             Margin="8,0,0,0"
+                             Command="{Binding SelectUnitCommand}"
+                             CommandParameter="W"
+                             IsChecked="{Binding IsWattsActive, Mode=OneWay}"
+                             AutomationProperties.Name="Show reading in watts"
+                             ToolTip="Show the reading in watts (power)" />
+            </StackPanel>
             <TextBlock Text="{Binding MeasuringText}"
                        Style="{StaticResource Caption}"
                        FontSize="14"
