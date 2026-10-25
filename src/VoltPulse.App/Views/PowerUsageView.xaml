@@ -1,0 +1,36 @@
+<UserControl x:Class="VoltPulse.App.Views.PowerUsageView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="26,18,26,18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <StackPanel>
+                <TextBlock Text="Power usage" Style="{StaticResource H1}" />
+                <TextBlock Style="{StaticResource Caption}" Margin="0,4,0,0"
+                           Text="Best-effort estimate: Windows does not expose per-app current draw. CPU activity is used as a proxy. GPU usage is not available without vendor tools." TextWrapping="Wrap" />
+            </StackPanel>
+            <Button Style="{StaticResource AppButton}" HorizontalAlignment="Right" VerticalAlignment="Top"
+                    Content="{Binding RefreshLabel}" Command="{Binding RefreshCommand}" />
+        </Grid>
+
+        <Border Grid.Row="2" Style="{StaticResource CardBody}" Padding="6" Margin="0,12,0,0">
+            <ListView ItemsSource="{Binding Processes}"
+                      Background="Transparent" BorderThickness="0"
+                      AutomationProperties.Name="Processes by CPU usage">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="Process" DisplayMemberBinding="{Binding Name}" Width="280" />
+                        <GridViewColumn Header="PID" DisplayMemberBinding="{Binding Id}" Width="80" />
+                        <GridViewColumn Header="CPU (estimate)" DisplayMemberBinding="{Binding CpuText}" Width="140" />
+                        <GridViewColumn Header="Memory" DisplayMemberBinding="{Binding MemoryText}" Width="120" />
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </Border>
+    </Grid>
+</UserControl>

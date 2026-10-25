@@ -1,0 +1,16 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>12</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest-Recommended</AnalysisLevel>
+    <AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
+    <Version>1.0.0</Version>
+    <Product>VoltPulse</Product>
+    <Authors>VoltPulse Project</Authors>
+    <Company>VoltPulse Project</Company>
+    <Copyright>Copyright © 2026 VoltPulse Project</Copyright>
+    <NeutralLanguage>en</NeutralLanguage>
+  </PropertyGroup>
+</Project>

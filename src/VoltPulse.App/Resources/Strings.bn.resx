@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <data name="OnboardingTip" xml:space="preserve">
+    <value>টিপ: বড় সংখ্যাটি হলো আপনার ব্যাটারিতে প্রবাহিত কারেন্ট। ঋণাত্মক মানে ডিসচার্জ, ধনাত্মক মানে চার্জ। কপি করতে নিচের যেকোনো মানে ক্লিক করুন।</value>
+  </data>
+  <data name="NoBattery" xml:space="preserve">
+    <value>কোনো ব্যাটারি পাওয়া যায়নি</value>
+  </data>
+  <data name="Measuring" xml:space="preserve">
+    <value>মাপা হচ্ছে...</value>
+  </data>
+  <data name="NotSupported" xml:space="preserve">
+    <value>এই ডিভাইস এটি সমর্থন করে না</value>
+  </data>
+</root>

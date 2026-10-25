@@ -1,0 +1,66 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build (warnings are failures)
+        run: dotnet build VoltPulse.sln -c Release --nologo /clp:"ErrorsOnly;WarningsOnly"
+
+      - name: Test
+        run: dotnet test VoltPulse.sln -c Release --no-build --nologo
+
+      - name: Publish win-x64
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: dotnet publish src/VoltPulse.App/VoltPulse.App.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o dist/win-x64
+
+      - name: Publish win-arm64
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: dotnet publish src/VoltPulse.App/VoltPulse.App.csproj -c Release -r win-arm64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o dist/win-arm64
+
+      - name: Package portable zip
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          $v = "${env:GITHUB_REF_NAME}".TrimStart("v")
+          Compress-Archive -Path "dist/win-x64/*" -DestinationPath "dist/VoltPulse-$v-portable-win-x64.zip"
+          "VERSION=$v" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Hashes
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          cd dist
+          sha256sum VoltPulse-*-portable-win-x64.zip win-x64/VoltPulse.exe win-arm64/VoltPulse.exe > SHA256SUMS.txt
+
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            dist/VoltPulse-*-portable-win-x64.zip \
+            dist/win-x64/VoltPulse.exe \
+            dist/win-arm64/VoltPulse.exe \
+            dist/SHA256SUMS.txt \
+            --title "VoltPulse ${GITHUB_REF_NAME#v}" \
+            --generate-notes

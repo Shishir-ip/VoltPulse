@@ -1,0 +1,14 @@
+<Application x:Class="VoltPulse.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             ShutdownMode="OnLastWindowClose">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- The Dark/Light theme dictionary is inserted at index 0 at runtime by ThemeManager. -->
+                <ResourceDictionary Source="pack://application:,,,/Theme/Controls.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/Controls/Icons.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

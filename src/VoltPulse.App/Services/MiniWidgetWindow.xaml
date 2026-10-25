@@ -1,0 +1,32 @@
+<Window x:Class="VoltPulse.App.Services.MiniWidgetWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="VoltPulse mini widget"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ShowInTaskbar="False"
+        Topmost="True"
+        Width="150" Height="66"
+        AutomationProperties.Name="VoltPulse mini widget">
+    <Border x:Name="Root" Background="#E6141414" CornerRadius="10" BorderBrush="#333333" BorderThickness="1" MouseLeftButtonDown="OnDrag">
+        <Grid Margin="10,6,10,6">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock x:Name="ValueText" Text="—" FontSize="20" FontWeight="SemiBold" Foreground="#ECECEC" />
+                <TextBlock x:Name="UnitText" Text="mA" FontSize="12" Foreground="#9E9E9E" VerticalAlignment="Bottom" Margin="4,0,0,3" />
+            </StackPanel>
+            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBlock x:Name="PercentText" Text="—" FontSize="11" Foreground="#9E9E9E" />
+                <TextBlock x:Name="StateText" Text="" FontSize="11" Foreground="#9E9E9E" Margin="6,0,0,0" />
+            </StackPanel>
+            <Button x:Name="HideButton" Content="×" Width="18" Height="18"
+                    HorizontalAlignment="Right" VerticalAlignment="Top"
+                    Background="Transparent" Foreground="#9E9E9E" BorderThickness="0"
+                    FontSize="11" Cursor="Hand" Click="OnHide" AutomationProperties.Name="Hide mini widget" />
+        </Grid>
+    </Border>
+</Window>

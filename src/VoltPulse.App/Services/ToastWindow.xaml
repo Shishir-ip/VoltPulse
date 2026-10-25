@@ -1,0 +1,32 @@
+<Window x:Class="VoltPulse.App.Services.ToastWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ShowInTaskbar="False"
+        ShowActivated="False"
+        Topmost="True"
+        Width="340"
+        SizeToContent="Height"
+        Focusable="False"
+        AutomationProperties.Name="VoltPulse notification">
+    <Border Background="{DynamicResource BrushSurface}"
+            BorderBrush="{DynamicResource BrushCardBorder}"
+            BorderThickness="1"
+            CornerRadius="12"
+            Padding="16,12"
+            Margin="8">
+        <StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Path Data="{StaticResource IconBell}"
+                      Width="15" Height="15" Stretch="Uniform"
+                      Stroke="{DynamicResource BrushAccent}" StrokeThickness="1.7"
+                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                      VerticalAlignment="Center" />
+                <TextBlock x:Name="TitleText" Text="" FontWeight="SemiBold" Margin="8,0,0,0" VerticalAlignment="Center" />
+            </StackPanel>
+            <TextBlock x:Name="MessageText" Text="" Style="{StaticResource Caption}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0" />
+        </StackPanel>
+    </Border>
+</Window>

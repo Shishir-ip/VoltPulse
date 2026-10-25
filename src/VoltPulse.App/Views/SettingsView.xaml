@@ -1,0 +1,182 @@
+<UserControl x:Class="VoltPulse.App.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:VoltPulse.App.ViewModels">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <Style x:Key="SectionHeader" TargetType="TextBlock" BasedOn="{StaticResource H2}">
+            <Setter Property="Margin" Value="0,18,0,6" />
+        </Style>
+        <Style x:Key="Row" TargetType="Grid">
+            <Setter Property="Margin" Value="0,3" />
+        </Style>
+    </UserControl.Resources>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="26,18,26,18">
+        <StackPanel MaxWidth="820" HorizontalAlignment="Stretch">
+            <TextBlock Text="Settings" Style="{StaticResource H1}" />
+
+            <TextBlock Text="Appearance" Style="{StaticResource SectionHeader}" />
+            <Border Style="{StaticResource CardBody}">
+                <StackPanel>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="240"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <TextBlock Text="Theme" VerticalAlignment="Center" />
+                        <ComboBox Grid.Column="1" Width="180" HorizontalAlignment="Left"
+                                  ItemsSource="{x:Static vm:SettingsViewModel.ThemeNames}"
+                                  SelectedItem="{Binding SelectedThemeName}"
+                                  AutomationProperties.Name="Theme" />
+                    </Grid>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="240"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <TextBlock Text="Use state colors (orange/teal/green/red)" VerticalAlignment="Center" />
+                        <CheckBox Grid.Column="1" IsChecked="{Binding UseStateColors}" VerticalAlignment="Center" />
+                    </Grid>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="240"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <TextBlock Text="Font size" VerticalAlignment="Center" />
+                        <Slider Grid.Column="1" Minimum="0.8" Maximum="1.5" Value="{Binding FontScale}"
+                                IsSnapToTickEnabled="True" TickFrequency="0.05" Width="260" HorizontalAlignment="Left"
+                                AutomationProperties.Name="Font size" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="Units and language" Style="{StaticResource SectionHeader}" />
+            <Border Style="{StaticResource CardBody}">
+                <StackPanel>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="240"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <TextBlock Text="Temperature in Fahrenheit" VerticalAlignment="Center" />
+                        <CheckBox Grid.Column="1" IsChecked="{Binding UseFahrenheit}" VerticalAlignment="Center" />
+                    </Grid>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="240"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <TextBlock Text="24-hour clock" VerticalAlignment="Center" />
+                        <CheckBox Grid.Column="1" IsChecked="{Binding Use24HourClock}" VerticalAlignment="Center" />
+                    </Grid>
+                    <TextBlock Style="{StaticResource Caption}" Text="English is shipped. More languages can be added as resource files (see README)."
+                               Margin="0,6,0,0" />
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="Sampling" Style="{StaticResource SectionHeader}" />
+            <Border Style="{StaticResource CardBody}">
+                <StackPanel>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="240"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <TextBlock Text="Sampling interval" VerticalAlignment="Center" />
+                        <ComboBox Grid.Column="1" Width="140" HorizontalAlignment="Left"
+                                  ItemsSource="{Binding IntervalChoices}"
+                                  SelectedItem="{Binding SelectedInterval}"
+                                  AutomationProperties.Name="Sampling interval" />
+                    </Grid>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="240"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <TextBlock Text="Smoothing (samples averaged)" VerticalAlignment="Center" />
+                        <ComboBox Grid.Column="1" Width="140" HorizontalAlignment="Left"
+                                  ItemsSource="{x:Static vm:SettingsViewModel.SmoothingChoices}"
+                                  SelectedItem="{Binding SmoothingSamples}"
+                                  AutomationProperties.Name="Smoothing" />
+                    </Grid>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="240"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <TextBlock Text="Invert sign (discharge = positive)" VerticalAlignment="Center"
+                                   ToolTip="By default charging is positive and discharging is negative, like Ampere." />
+                        <CheckBox Grid.Column="1" IsChecked="{Binding InvertSign}" VerticalAlignment="Center" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="Startup and shell" Style="{StaticResource SectionHeader}" />
+            <Border Style="{StaticResource CardBody}">
+                <StackPanel>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="240"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <TextBlock Text="Start with Windows" VerticalAlignment="Center" />
+                        <CheckBox Grid.Column="1" IsChecked="{Binding StartWithWindows}" VerticalAlignment="Center" />
+                    </Grid>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="240"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <TextBlock Text="Start minimized to tray" VerticalAlignment="Center" />
+                        <CheckBox Grid.Column="1" IsChecked="{Binding StartMinimizedToTray}" VerticalAlignment="Center" />
+                    </Grid>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="240"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <TextBlock Text="Close button minimizes to tray" VerticalAlignment="Center" />
+                        <CheckBox Grid.Column="1" IsChecked="{Binding CloseToTray}" VerticalAlignment="Center" />
+                    </Grid>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="240"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <TextBlock Text="Show tray icon" VerticalAlignment="Center" />
+                        <CheckBox Grid.Column="1" IsChecked="{Binding ShowTrayIcon}" VerticalAlignment="Center" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="Data" Style="{StaticResource SectionHeader}" />
+            <Border Style="{StaticResource CardBody}">
+                <StackPanel>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="240"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <TextBlock Text="Full-resolution history (days)" VerticalAlignment="Center" />
+                        <ComboBox Grid.Column="1" Width="140" HorizontalAlignment="Left"
+                                  ItemsSource="{x:Static vm:SettingsViewModel.FullResChoices}"
+                                  SelectedItem="{Binding FullResolutionDays}" />
+                    </Grid>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="240"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <TextBlock Text="Keep downsampled history (days)" VerticalAlignment="Center" />
+                        <ComboBox Grid.Column="1" Width="140" HorizontalAlignment="Left"
+                                  ItemsSource="{x:Static vm:SettingsViewModel.DownsampleChoices}"
+                                  SelectedItem="{Binding DownsampledDays}" />
+                    </Grid>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="240"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <TextBlock Text="Export folder" VerticalAlignment="Center" TextWrapping="Wrap" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <TextBox Text="{Binding ExportFolder, UpdateSourceTrigger=PropertyChanged}" Width="330" VerticalAlignment="Center" />
+                            <Button Style="{StaticResource AppButton}" Content="Browse..." Command="{Binding PickExportFolderCommand}" Margin="8,0,0,0" />
+                        </StackPanel>
+                    </Grid>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="240"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <TextBlock Text="Include serial number in exports" VerticalAlignment="Center" />
+                        <CheckBox Grid.Column="1" IsChecked="{Binding IncludeSerial}" VerticalAlignment="Center" />
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <Button Style="{StaticResource AppButton}" Content="Clear history" Command="{Binding ClearHistoryCommand}" />
+                        <Button Style="{StaticResource AppButton}" Content="Backup settings" Command="{Binding BackupSettingsCommand}" Margin="8,0,0,0" />
+                        <Button Style="{StaticResource AppButton}" Content="Restore backup" Command="{Binding RestoreSettingsCommand}" Margin="8,0,0,0" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="Advanced" Style="{StaticResource SectionHeader}" />
+            <Border Style="{StaticResource CardBody}">
+                <StackPanel>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="240"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <TextBlock Text="Preferred data provider" VerticalAlignment="Center" />
+                        <ComboBox Grid.Column="1" Width="220" HorizontalAlignment="Left"
+                                  ItemsSource="{x:Static vm:SettingsViewModel.ProviderNames}"
+                                  SelectedItem="{Binding PreferredProvider}" />
+                    </Grid>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="240"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <TextBlock Text="Demo mode (simulated battery)" VerticalAlignment="Center" />
+                        <CheckBox Grid.Column="1" IsChecked="{Binding DemoMode}" VerticalAlignment="Center" />
+                    </Grid>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="240"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <TextBlock Text="Debug logging" VerticalAlignment="Center" />
+                        <CheckBox Grid.Column="1" IsChecked="{Binding DebugLogging}" VerticalAlignment="Center" />
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <Button Style="{StaticResource AppButton}" Content="Reset all settings" Command="{Binding ResetSettingsCommand}" />
+                        <TextBlock Text="{Binding Status}" Style="{StaticResource Caption}" VerticalAlignment="Center" Margin="12,0,0,0" TextWrapping="Wrap" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

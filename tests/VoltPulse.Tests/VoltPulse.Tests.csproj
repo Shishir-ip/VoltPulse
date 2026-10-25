@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>VoltPulse.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\VoltPulse.Core\VoltPulse.Core.csproj" />
+    <ProjectReference Include="..\..\src\VoltPulse.Providers\VoltPulse.Providers.csproj" />
+    <ProjectReference Include="..\..\src\VoltPulse.Services\VoltPulse.Services.csproj" />
+  </ItemGroup>
+
+</Project>

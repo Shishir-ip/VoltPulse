@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <data name="OnboardingTip" xml:space="preserve">
+    <value>Tip: the big number is the current flowing in or out of your battery. Negative means discharging, positive means charging. Click any value below to copy it.</value>
+  </data>
+  <data name="NoBattery" xml:space="preserve">
+    <value>No battery detected</value>
+  </data>
+  <data name="Measuring" xml:space="preserve">
+    <value>measuring...</value>
+  </data>
+  <data name="NotSupported" xml:space="preserve">
+    <value>Not supported by this device</value>
+  </data>
+</root>

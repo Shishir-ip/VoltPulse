@@ -1,0 +1,37 @@
+<UserControl x:Class="VoltPulse.App.Views.AboutView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="26,18,26,18">
+        <StackPanel MaxWidth="820" HorizontalAlignment="Stretch">
+            <StackPanel Orientation="Horizontal">
+                <Path Data="{StaticResource IconBolt}" Width="26" Height="26" Stretch="Uniform" Fill="{DynamicResource BrushAccent}" VerticalAlignment="Center" />
+                <TextBlock Text="VoltPulse" Style="{StaticResource H1}" Margin="10,0,0,0" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding Version}" Style="{StaticResource Caption}" Margin="10,0,0,0" VerticalAlignment="Center" />
+            </StackPanel>
+            <TextBlock Style="{StaticResource Caption}" Margin="0,6,0,0"
+                       Text="A local-only battery monitor. No network access, no telemetry, no accounts, no ads." TextWrapping="Wrap" />
+
+            <Border Style="{StaticResource CardBody}" Margin="0,14,0,0">
+                <StackPanel>
+                    <TextBlock Text="Data providers on this machine" Style="{StaticResource H2}" />
+                    <TextBlock Text="{Binding ProviderStatus}" FontFamily="Consolas" FontSize="12.5" Margin="0,8,0,0" TextWrapping="Wrap" />
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <Button Style="{StaticResource AppButton}" Content="Copy diagnostics" Command="{Binding CopyDiagnosticsCommand}" />
+                        <Button Style="{StaticResource AppButton}" Content="Open logs folder" Command="{Binding OpenLogsFolderCommand}" Margin="8,0,0,0" />
+                        <TextBlock Text="{Binding Status}" Style="{StaticResource Caption}" VerticalAlignment="Center" Margin="12,0,0,0" TextWrapping="Wrap" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource CardBody}" Margin="0,14,0,0">
+                <StackPanel>
+                    <TextBlock Text="Why are some values missing?" Style="{StaticResource H2}" />
+                    <TextBlock Style="{StaticResource Caption}" Margin="0,6,0,0" TextWrapping="Wrap"
+                               Text="Laptop firmware exposes only a subset of battery data. Temperature, cycle count, manufacture date and precise current often are not reported; Windows itself estimates many of these. VoltPulse shows 'Not supported by this device' instead of guessing, and every value's tooltip names its source." />
+                    <TextBlock Style="{StaticResource Caption}" Margin="0,6,0,0" TextWrapping="Wrap"
+                               Text="Runtime: .NET 8. Data lives in %APPDATA%\VoltPulse. See LIMITATIONS.md in the project for hardware-specific details." />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

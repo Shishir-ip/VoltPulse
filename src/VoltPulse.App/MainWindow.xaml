@@ -1,0 +1,101 @@
+<Window x:Class="VoltPulse.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:VoltPulse.App.ViewModels"
+        xmlns:views="clr-namespace:VoltPulse.App.Views"
+        Title="VoltPulse"
+        Width="1040"
+        Height="740"
+        MinWidth="800"
+        MinHeight="580"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource BrushBg}">
+    <Window.Resources>
+        <DataTemplate DataType="{x:Type vm:LiveViewModel}">
+            <views:LiveView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ComingSoonViewModel}">
+            <views:ComingSoonView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
+            <views:DashboardView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:HealthViewModel}">
+            <views:HealthView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SessionsViewModel}">
+            <views:SessionsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:InsightsViewModel}">
+            <views:InsightsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:PowerUsageViewModel}">
+            <views:PowerUsageView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AlertsViewModel}">
+            <views:AlertsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ReportsViewModel}">
+            <views:ReportsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+            <views:SettingsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AboutViewModel}">
+            <views:AboutView />
+        </DataTemplate>
+    </Window.Resources>
+    <Grid x:Name="RootGrid">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="205" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0"
+                Background="{DynamicResource BrushSurface}"
+                BorderBrush="{DynamicResource BrushCardBorder}"
+                BorderThickness="0,0,1,0">
+            <DockPanel Margin="0,18,0,12">
+                <StackPanel DockPanel.Dock="Top" Margin="16,0,16,20" Orientation="Horizontal">
+                    <Path Data="{StaticResource IconBolt}"
+                          Width="20" Height="20"
+                          Stretch="Uniform"
+                          Fill="{DynamicResource BrushAccent}" />
+                    <TextBlock Text="VoltPulse"
+                               FontSize="17"
+                               FontWeight="SemiBold"
+                               Margin="9,0,0,0"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+
+                <ItemsControl DockPanel.Dock="Top" ItemsSource="{Binding NavItems}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <RadioButton GroupName="Nav"
+                                         IsChecked="{Binding IsCurrent, Mode=TwoWay}"
+                                         Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                         CommandParameter="{Binding}"
+                                         Style="{StaticResource NavRadioButton}"
+                                         Margin="10,1"
+                                         AutomationProperties.Name="{Binding Label}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Data="{Binding Icon}"
+                                          Width="18" Height="18"
+                                          Stretch="Uniform"
+                                          Stroke="{DynamicResource BrushTextPrimary}"
+                                          StrokeThickness="1.7"
+                                          StrokeStartLineCap="Round"
+                                          StrokeEndLineCap="Round"
+                                          StrokeLineJoin="Round" />
+                                    <TextBlock Text="{Binding Label}" Margin="11,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </RadioButton>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </DockPanel>
+        </Border>
+
+        <ContentControl x:Name="PageHost" Grid.Column="1" Content="{Binding CurrentPage}" Focusable="False" />
+    </Grid>
+</Window>
