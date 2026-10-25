@@ -19,8 +19,8 @@ Grab the latest build from the [**Releases page**](https://github.com/Shishir-ip
 | File | What it is |
 | --- | --- |
 | `VoltPulse-x.y.z-portable-win-x64.zip` | Portable build - extract anywhere and run `VoltPulse.exe` (recommended) |
-| `win-x64/VoltPulse.exe` | Single-file self-contained executable (x64) |
-| `win-arm64/VoltPulse.exe` | Single-file self-contained executable (ARM64 laptops) |
+| `VoltPulse-x.y.z-win-x64.exe` | Single-file self-contained executable (x64) |
+| `VoltPulse-x.y.z-win-arm64.exe` | Single-file self-contained executable (ARM64 laptops) |
 | `SHA256SUMS.txt` | SHA-256 checksums - verify before running (builds are unsigned, so SmartScreen shows a one-time warning; see below) |
 
 Every release is built automatically by GitHub Actions from source. No admin rights are required;
