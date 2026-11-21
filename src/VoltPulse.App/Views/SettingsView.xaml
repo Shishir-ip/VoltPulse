@@ -168,6 +168,12 @@
                     </Grid>
                     <Grid Style="{StaticResource Row}">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="240"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <TextBlock Text="Run on the discrete GPU (RTX)" VerticalAlignment="Center"
+                                   ToolTip="Ask Windows to render VoltPulse on the high-performance GPU instead of the integrated one. Turning this off saves battery." />
+                        <CheckBox Grid.Column="1" IsChecked="{Binding PreferDiscreteGpu}" VerticalAlignment="Center" />
+                    </Grid>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="240"/><ColumnDefinition/></Grid.ColumnDefinitions>
                         <TextBlock Text="Debug logging" VerticalAlignment="Center" />
                         <CheckBox Grid.Column="1" IsChecked="{Binding DebugLogging}" VerticalAlignment="Center" />
                     </Grid>

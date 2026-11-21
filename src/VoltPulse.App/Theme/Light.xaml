@@ -1,5 +1,6 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:po="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options">
 
     <Color x:Key="ColorBg">#F4F5F7</Color>
     <Color x:Key="ColorSurface">#FFFFFF</Color>
@@ -15,23 +16,23 @@
     <Color x:Key="ColorPillTrack">#E1E3E6</Color>
     <Color x:Key="ColorAccent">#00A08A</Color>
 
-    <SolidColorBrush x:Key="BrushBg" Color="{StaticResource ColorBg}" />
-    <SolidColorBrush x:Key="BrushSurface" Color="{StaticResource ColorSurface}" />
-    <SolidColorBrush x:Key="BrushCard" Color="{StaticResource ColorCard}" />
-    <SolidColorBrush x:Key="BrushCardBorder" Color="{StaticResource ColorCardBorder}" />
-    <SolidColorBrush x:Key="BrushHeader" Color="{StaticResource ColorHeader}" />
-    <SolidColorBrush x:Key="BrushTextPrimary" Color="{StaticResource ColorTextPrimary}" />
-    <SolidColorBrush x:Key="BrushTextSecondary" Color="{StaticResource ColorTextSecondary}" />
-    <SolidColorBrush x:Key="BrushButtonBg" Color="{StaticResource ColorButtonBg}" />
-    <SolidColorBrush x:Key="BrushButtonHover" Color="{StaticResource ColorButtonHover}" />
-    <SolidColorBrush x:Key="BrushNavHover" Color="{StaticResource ColorNavHover}" />
-    <SolidColorBrush x:Key="BrushNavActive" Color="{StaticResource ColorNavActive}" />
-    <SolidColorBrush x:Key="BrushPillTrack" Color="{StaticResource ColorPillTrack}" />
-    <SolidColorBrush x:Key="BrushAccent" Color="{StaticResource ColorAccent}" />
+    <SolidColorBrush po:Freeze="True" x:Key="BrushBg" Color="{StaticResource ColorBg}" />
+    <SolidColorBrush po:Freeze="True" x:Key="BrushSurface" Color="{StaticResource ColorSurface}" />
+    <SolidColorBrush po:Freeze="True" x:Key="BrushCard" Color="{StaticResource ColorCard}" />
+    <SolidColorBrush po:Freeze="True" x:Key="BrushCardBorder" Color="{StaticResource ColorCardBorder}" />
+    <SolidColorBrush po:Freeze="True" x:Key="BrushHeader" Color="{StaticResource ColorHeader}" />
+    <SolidColorBrush po:Freeze="True" x:Key="BrushTextPrimary" Color="{StaticResource ColorTextPrimary}" />
+    <SolidColorBrush po:Freeze="True" x:Key="BrushTextSecondary" Color="{StaticResource ColorTextSecondary}" />
+    <SolidColorBrush po:Freeze="True" x:Key="BrushButtonBg" Color="{StaticResource ColorButtonBg}" />
+    <SolidColorBrush po:Freeze="True" x:Key="BrushButtonHover" Color="{StaticResource ColorButtonHover}" />
+    <SolidColorBrush po:Freeze="True" x:Key="BrushNavHover" Color="{StaticResource ColorNavHover}" />
+    <SolidColorBrush po:Freeze="True" x:Key="BrushNavActive" Color="{StaticResource ColorNavActive}" />
+    <SolidColorBrush po:Freeze="True" x:Key="BrushPillTrack" Color="{StaticResource ColorPillTrack}" />
+    <SolidColorBrush po:Freeze="True" x:Key="BrushAccent" Color="{StaticResource ColorAccent}" />
 
-    <SolidColorBrush x:Key="BrushStateDischarging" Color="#E65100" />
-    <SolidColorBrush x:Key="BrushStateCharging" Color="#00897B" />
-    <SolidColorBrush x:Key="BrushStateFull" Color="#2E7D32" />
-    <SolidColorBrush x:Key="BrushStateCritical" Color="#C62828" />
-    <SolidColorBrush x:Key="BrushStateUnknown" Color="#63666A" />
+    <SolidColorBrush po:Freeze="True" x:Key="BrushStateDischarging" Color="#E65100" />
+    <SolidColorBrush po:Freeze="True" x:Key="BrushStateCharging" Color="#00897B" />
+    <SolidColorBrush po:Freeze="True" x:Key="BrushStateFull" Color="#2E7D32" />
+    <SolidColorBrush po:Freeze="True" x:Key="BrushStateCritical" Color="#C62828" />
+    <SolidColorBrush po:Freeze="True" x:Key="BrushStateUnknown" Color="#63666A" />
 </ResourceDictionary>

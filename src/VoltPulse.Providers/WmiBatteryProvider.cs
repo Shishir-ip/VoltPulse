@@ -25,7 +25,10 @@ public sealed class WmiBatteryProvider : IBatteryProvider, IRefreshable
     private readonly object _gate = new();
 
     private ManagementScope? _scope;
+    private ManagementObjectSearcher? _statusSearcher;
     private DateTime _scopeFailedUntilUtc = DateTime.MinValue;
+    private DateTime _temperatureSkipUntilUtc = DateTime.MinValue;
+    private int _temperatureEmptyStreak;
 
     private Dictionary<string, BatteryData>? _statics;      // keyed by instance name
     private Dictionary<string, uint?>? _fullCharge;         // keyed by instance name
@@ -56,9 +59,11 @@ public sealed class WmiBatteryProvider : IBatteryProvider, IRefreshable
                     return results;
                 }
 
-                var status = QueryInstances("SELECT * FROM BatteryStatus");
-                var temperatures = QueryInstances("SELECT InstanceName, Temperature FROM BatteryTemperature")
-                    .ToDictionary(kv => kv.Key, kv => kv.Value);
+                var status = GetStatusInstances();
+                var temperatures = DateTime.UtcNow >= _temperatureSkipUntilUtc
+                    ? QueryInstances("SELECT InstanceName, Temperature FROM BatteryTemperature")
+                        .ToDictionary(kv => kv.Key, kv => kv.Value)
+                    : new Dictionary<string, ManagementBaseObject>(StringComparer.OrdinalIgnoreCase);
 
                 EnsureStatics(status.Keys);
 
@@ -130,6 +135,22 @@ public sealed class WmiBatteryProvider : IBatteryProvider, IRefreshable
                     foreach (var row in temperatures.Values) row.Dispose();
                 }
 
+                // Machines without a temperature sensor answered with zero instances; stop
+                // hammering WMI for it every second and retry once a minute instead.
+                if (temperatures.Count == 0)
+                {
+                    _temperatureEmptyStreak++;
+                    if (_temperatureEmptyStreak >= 3)
+                    {
+                        _temperatureSkipUntilUtc = DateTime.UtcNow + TimeSpan.FromSeconds(60);
+                    }
+                }
+                else
+                {
+                    _temperatureEmptyStreak = 0;
+                    _temperatureSkipUntilUtc = DateTime.MinValue;
+                }
+
                 IsAvailable = results.Count > 0;
                 if (IsAvailable) LastError = null;
             }
@@ -148,6 +169,8 @@ public sealed class WmiBatteryProvider : IBatteryProvider, IRefreshable
     {
         lock (_gate)
         {
+            _statusSearcher?.Dispose();
+            _statusSearcher = null;
             _scope = null;
             _statics = null;
             _fullCharge = null;
@@ -317,6 +340,55 @@ public sealed class WmiBatteryProvider : IBatteryProvider, IRefreshable
         // normalized prefix (first token) which matches in the common single-battery case.
         var parts = wmiInstanceName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         return parts.Length > 1 ? parts[^1] : wmiInstanceName;
+    }
+
+    /// <summary>
+    /// The status query runs every tick; caching the searcher avoids re-building the WMI
+    /// query object each time. Recreated whenever the scope is reconnected.
+    /// </summary>
+    private Dictionary<string, ManagementBaseObject> GetStatusInstances()
+    {
+        var result = new Dictionary<string, ManagementBaseObject>(StringComparer.OrdinalIgnoreCase);
+        try
+        {
+            if (_statusSearcher is null)
+            {
+                _statusSearcher = new ManagementObjectSearcher(_scope!, new ObjectQuery("SELECT * FROM BatteryStatus"));
+            }
+            foreach (var o in _statusSearcher.Get())
+            {
+                string? instanceName = null;
+                try
+                {
+                    instanceName = o["InstanceName"]?.ToString();
+                }
+                catch
+                {
+                    instanceName = null;
+                }
+                if (instanceName is null)
+                {
+                    using (o)
+                    {
+                    }
+                    continue;
+                }
+                if (result.TryGetValue(instanceName, out var existing))
+                {
+                    using (existing)
+                    using (o)
+                    {
+                    }
+                    continue;
+                }
+                result[instanceName] = o;
+            }
+        }
+        catch (ManagementException ex) when (ex.ErrorCode == ManagementStatus.InvalidQuery)
+        {
+            // class not implemented on this machine - fine
+        }
+        return result;
     }
 
     private Dictionary<string, ManagementBaseObject> QueryInstances(string query)

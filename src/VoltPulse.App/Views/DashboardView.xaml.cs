@@ -24,10 +24,13 @@ public partial class DashboardView : UserControl
         DataContextChanged += (_, _) => OnViewModelChanged();
         IsVisibleChanged += (_, e) =>
         {
-            if (ViewModel is { } vm) vm.Active = e.NewValue is true;
+            bool visible = e.NewValue is true;
+            if (ViewModel is { } vm) vm.Active = visible;
+            // No timer ticks while the page is hidden (avoid idle timers in a tray app).
+            if (visible) _renderTimer.Start();
+            else _renderTimer.Stop();
         };
         Unloaded += (_, _) => _renderTimer.Stop();
-        Loaded += (_, _) => _renderTimer.Start();
     }
 
     private DashboardViewModel? ViewModel => DataContext as DashboardViewModel;

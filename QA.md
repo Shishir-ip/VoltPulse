@@ -29,6 +29,12 @@ Run through this list before each release. Hardware used for the last pass: Acer
 - [ ] Demo mode toggle switches to the simulated battery (and back).
 - [ ] Mini widget toggle shows/hides the overlay.
 
+## Unit toggle (regression found in testing)
+
+- [ ] Toggle the Live reading to W, close the app fully, and reopen it - it must start in W mode without crashing.
+  (Regression caught: persisting LiveUnit=Watt crashed the LiveViewModel constructor on the next
+  launch, leaving an invisible headless app. Constructor order was fixed and hardened.)
+
 ## Navigation (regression found in testing)
 
 - [ ] Click EVERY navigation item once right after launch: Live, Graphs, Health, Sessions, Insights, Power usage, Alerts, Reports, Settings, About - each must render without errors.

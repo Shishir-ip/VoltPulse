@@ -53,7 +53,13 @@ public sealed partial class SettingsViewModel : ObservableObject
         _showRawValues = s.ShowRawValues;
         _debugLogging = s.DebugLogging;
         _demoMode = s.DemoMode;
+        _preferDiscreteGpu = s.PreferDiscreteGpu;
     }
+
+    [ObservableProperty]
+    private bool _preferDiscreteGpu;
+
+    partial void OnPreferDiscreteGpuChanged(bool value) => Set(s => s.PreferDiscreteGpu = value);
 
     [ObservableProperty]
     private string _selectedThemeName;

@@ -97,6 +97,8 @@ public sealed class AppSettings
     public List<AlertRuleSettings> Alerts { get; set; } = AlertDefaults.All();
 
     // Advanced
+    /// <summary>Ask Windows to run VoltPulse on the discrete GPU (high performance) on hybrid-GPU laptops.</summary>
+    public bool PreferDiscreteGpu { get; set; } = true;
     public string? PreferredProvider { get; set; }
     public bool ShowRawValues { get; set; }
     public bool DebugLogging { get; set; }

@@ -35,7 +35,7 @@ $step = 3
 foreach ($target in $publish) {
     Write-Host "`n[$step/6] Publishing self-contained single-file ($($target.Rid))..." -ForegroundColor Yellow
     dotnet publish src\VoltPulse.App\VoltPulse.App.csproj -c $Configuration -r $target.Rid `
-        --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true `
+        --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:PublishReadyToRun=true `
         -p:DebugType=none -p:DebugTypeEmbedded=false -o $target.Out --nologo -v q
     if ($LASTEXITCODE -ne 0) { throw "publish $($target.Rid) failed" }
     $step++

@@ -82,10 +82,33 @@ public partial class App : System.Windows.Application, IDisposable
         settings.Changed += s => Dispatcher.BeginInvoke(() => ThemeManager.Apply(s));
         StartupManager.Apply(settings.Current);
         settings.Changed += s => StartupManager.Apply(s);
+        GpuPreference.Apply(settings.Current);
+        settings.Changed += s => GpuPreference.Apply(s);
 
-        var window = _host.Services.GetRequiredService<MainWindow>();
-        MainWindow = window;
-        window.Show();
+        try
+        {
+            var window = _host.Services.GetRequiredService<MainWindow>();
+            MainWindow = window;
+            window.Show();
+        }
+        catch (Exception ex)
+        {
+            // A broken page view-model must never leave an invisible zombie running.
+            Log.Fatal(ex, "Main window creation failed; exiting instead of running headless");
+            MessageBox.Show(
+                "VoltPulse failed to open its main window and will now close.\n\n" +
+                "Technical details were copied to the clipboard and written to the log.",
+                "VoltPulse", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            try
+            {
+                System.Windows.Clipboard.SetText(ex.ToString());
+            }
+            catch
+            {
+                // clipboard can be busy
+            }
+            Shutdown(1);
+        }
     }
 
     protected override void OnExit(System.Windows.ExitEventArgs e)

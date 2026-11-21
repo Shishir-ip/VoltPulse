@@ -119,7 +119,6 @@ public sealed partial class LiveViewModel : ObservableObject
         _dispatcher = Dispatcher.CurrentDispatcher;
 
         OnboardingVisible = !settings.Current.OnboardingShown;
-        SyncUnitFromSettings(settings.Current);
         ApplySmoothingWindow();
 
         _animTimer = new DispatcherTimer(DispatcherPriority.Render)
@@ -127,6 +126,10 @@ public sealed partial class LiveViewModel : ObservableObject
             Interval = TimeSpan.FromMilliseconds(16),
         };
         _animTimer.Tick += AnimTick;
+
+        // Unit sync must run AFTER _animTimer exists (OnUnitSwitched stops it). Setting it in the
+        // constructor while LiveUnit=Watt was persisted previously crashed every startup.
+        SyncUnitFromSettings(settings.Current);
 
         _sampler.SnapshotReady += OnSnapshotReady;
         _settings.Changed += OnSettingsChanged;
@@ -159,7 +162,7 @@ public sealed partial class LiveViewModel : ObservableObject
     {
         // Reset the animation and the pill calibration for the new unit's domain.
         _hasDisplayedValue = false;
-        _animTimer.Stop();
+        _animTimer?.Stop();
         _observedMax = IsWattsActive ? PillFloorMw : PillFloorMa;
         RenderReading();
         UpdateMinMaxText();
